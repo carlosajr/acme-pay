@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres
+    container_name: acme-pay-postgres
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=acme-pay
+    volumes:
+      - "./data/accounts/postgres:/var/lib/postgresql/data"
+    ports:
+      - 5433:5432
+    networks:
+      - acme-net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: acme-pay-rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - "rabbitmq_data:/var/lib/rabbitmq"
+      - "rabbitmq_log:/var/log/rabbitmq"
+    networks:
+      - acme-net
+
+  redis:
+    image: redis:alpine
+    container_name: acme-pay-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis_data:/data"
+    networks:
+      - acme-net
+
+networks:
+  acme-net:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  rabbitmq_log:
+    driver: local
+  redis_data:
+    driver: local
