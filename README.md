@@ -8,3 +8,4 @@ Você precisará do Java e do Maven instalados em seu computador para executar o
 
 - [Java JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 - [Maven 3.9.7](https://maven.apache.org/download.cgi)
+- [Docker](https://www.docker.com/)
