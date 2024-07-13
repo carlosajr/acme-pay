@@ -1,10 +1,12 @@
 package br.com.acmepay.application.domain.models;
 
 import br.com.acmepay.adapters.request.DocumentRequest;
+import br.com.acmepay.adapters.request.TransactionRequest;
 import br.com.acmepay.application.domain.exception.AccountSuspendedException;
 import br.com.acmepay.application.domain.exception.BalanceToWithdrawException;
 import br.com.acmepay.application.enums.DocumentStatus;
 import br.com.acmepay.application.ports.out.ICheckDocumentCustomer;
+import br.com.acmepay.application.ports.out.ICreateTransaction;
 import br.com.acmepay.application.ports.out.IListAccountDomain;
 import br.com.acmepay.application.ports.out.ICreateAccount;
 import br.com.acmepay.application.util.memory.IMemoryDataUtil;
@@ -30,19 +32,28 @@ public class AccountDomain {
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
 
-    public void create(ICreateAccount createAccount, ICheckDocumentCustomer checkDocumentCustomer, IMemoryDataUtil memoryDataUtil) throws InterruptedException, AccountSuspendedException {
+    public void create(ICreateAccount createAccount, ICheckDocumentCustomer checkDocumentCustomer, IMemoryDataUtil memoryDataUtil, ICreateTransaction createTransaction) throws InterruptedException, AccountSuspendedException {
 
-        var doc = DocumentRequest.builder().document(this.customerDocument).build();
+        DocumentRequest doc = DocumentRequest.builder().document(this.customerDocument).build();
         checkDocumentCustomer.execute(doc);
 
         Thread.sleep(5000);
 
-        var checkDocumentCustomerResponse = DocumentStatus.valueOf(memoryDataUtil.getValue(this.customerDocument));
+        DocumentStatus checkDocumentCustomerResponse = DocumentStatus.valueOf(memoryDataUtil.getValue(this.customerDocument));
 
         if (checkDocumentCustomerResponse.equals(DocumentStatus.SUSPENDED))
             throw new AccountSuspendedException();
 
         createAccount.execute(this);
+
+        TransactionRequest transactionRequest = TransactionRequest.builder()
+                .originAccount(this.number)
+                .destinationAccount(98493)
+                .amount(new BigDecimal("100.00"))
+                .date(LocalDateTime.now())
+                .build();
+
+        createTransaction.execute(transactionRequest);
     }
 
     public List<AccountDomain> list(IListAccountDomain listAccountDomain){
